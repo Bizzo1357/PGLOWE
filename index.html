@@ -73,8 +73,16 @@ select#jobSelect{width:auto;max-width:150px;padding:8px 10px;font-size:13px}
 
 .stage,.unit{border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px}
 .stage:last-child,.unit:last-child{margin-bottom:0}
-.stage-head,.unit-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
-input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:700;font-size:14px}
+.stage-head,.unit-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.stage-grip{flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--text-muted);
+  cursor:grab;touch-action:none;padding:2px;margin:-2px 0 -2px -2px}
+.stage-grip:active{cursor:grabbing}
+input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:700;font-size:14px;flex:1 1 auto;min-width:0}
+.unit-head strong{flex:1 1 auto;min-width:0}
+.head-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.stage-head h2{flex:1 1 auto}
+.stage.dragging{opacity:0.9;border-color:var(--accent);box-shadow:0 6px 20px rgba(0,0,0,0.4);background:var(--surface-2)}
+.reordering{cursor:grabbing}
 
 .badge{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;
   padding:3px 8px;border-radius:999px;white-space:nowrap}
@@ -85,8 +93,9 @@ input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:70
 .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .thumb{width:60px;height:60px;border-radius:8px;object-fit:cover;border:1px solid var(--border)}
 .thumb-wrap{position:relative}
-.thumb-del{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;
-  background:var(--danger);color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;padding:0}
+.thumb-del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;
+  background:var(--danger);color:#fff;border:1.5px solid var(--bg);font-size:14px;font-weight:700;
+  padding:0;display:flex;align-items:center;justify-content:center;line-height:1}
 .add-photo{width:60px;height:60px;border-radius:8px;border:1.5px dashed var(--border);
   display:flex;align-items:center;justify-content:center;color:var(--text-muted);cursor:pointer;flex-shrink:0}
 .add-photo input{display:none}
@@ -111,6 +120,56 @@ input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:70
 
 .i{width:16px;height:16px;flex-shrink:0}
 
+/* photo number badge */
+.thumb{cursor:pointer}
+.thumb-num{position:absolute;bottom:-5px;left:-5px;background:var(--accent);color:var(--accent-ink);
+  font-size:10px;font-weight:800;line-height:1;min-width:16px;height:16px;padding:0 4px;
+  border-radius:8px;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--bg);pointer-events:none}
+
+/* full-screen photo viewer */
+#lightbox{position:fixed;inset:0;z-index:100;background:rgba(8,10,12,0.95);
+  display:flex;align-items:center;justify-content:center;overflow:auto;padding:0}
+#lightbox[hidden]{display:none}
+.lb-img{max-width:100vw;max-height:100vh;object-fit:contain;cursor:zoom-in;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.lb-img.zoomed{max-width:none;max-height:none;width:auto;height:auto;cursor:zoom-out}
+.lb-close{position:fixed;top:14px;right:14px;z-index:101;width:42px;height:42px;border-radius:50%;
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  font-size:24px;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+.lb-hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:101;pointer-events:none;
+  color:var(--text-muted);font-size:12px;background:var(--surface-2);padding:6px 12px;
+  border-radius:999px;border:1px solid var(--border);white-space:nowrap}
+
+/* auto-save caption above job details */
+.autosave-note{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:12px;
+  margin:0 0 10px 2px}
+.autosave-note::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--success);
+  box-shadow:0 0 0 3px var(--success-ink)}
+
+/* confirm modal */
+.modal-overlay{position:fixed;inset:0;z-index:120;background:rgba(8,10,12,0.7);
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:20px;max-width:340px;width:100%}
+.modal-msg{margin:0 0 18px;font-size:15px;line-height:1.4;color:var(--text)}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+.modal-cancel{background:var(--surface-2)}
+.modal-confirm{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* barcode scanner overlay */
+.scan-overlay{position:fixed;inset:0;z-index:130;background:#000;
+  display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scan-video{width:100%;height:100%;object-fit:cover}
+.scan-frame{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:78vw;max-width:420px;height:150px;border:2px solid var(--accent);border-radius:12px;
+  box-shadow:0 0 0 100vmax rgba(0,0,0,0.45);pointer-events:none}
+.scan-hint{position:fixed;top:calc(50% + 100px);left:50%;transform:translateX(-50%);
+  color:#fff;font-size:14px;background:rgba(0,0,0,0.6);padding:6px 14px;border-radius:999px;
+  pointer-events:none;white-space:nowrap}
+.scan-cancel{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--surface-2);border:1px solid var(--border);color:var(--text);
+  padding:12px 28px;border-radius:999px;font-size:15px;font-weight:600}
+
 </style>
 <title>Delivery Ticket</title>
 </head>
@@ -125,6 +184,7 @@ input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:70
   <symbol id="ic-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></symbol>
   <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
   <symbol id="ic-truck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></symbol>
+  <symbol id="ic-grip" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="9" cy="5" r="1.6"/><circle cx="15" cy="5" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="19" r="1.6"/><circle cx="15" cy="19" r="1.6"/></symbol>
 </svg>
 
 <div class="topbar">
@@ -139,6 +199,7 @@ input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:70
 </div>
 
 <main>
+  <p class="autosave-note">Photos and data auto-saves</p>
   <section class="card">
     <h2>Job details</h2>
     <label class="field">
@@ -180,11 +241,11 @@ input.stage-name{border:none;background:transparent;padding:2px 0;font-weight:70
 
   <section class="card">
     <div class="stage-head" style="margin-bottom:2px">
-      <h2 style="margin:0">Units</h2>
+      <h2 style="margin:0">Damaged Units</h2>
       <button id="addUnitBtn"><svg class="i" style="width:14px;height:14px"><use href="#ic-plus"/></svg>Add unit</button>
     </div>
     <div id="unitsContainer"></div>
-    <p class="empty" id="unitsEmpty">No units added yet.</p>
+    <p class="empty" id="unitsEmpty">No damaged units added yet.</p>
   </section>
 </main>
 
@@ -651,7 +712,7 @@ function freshJob(){
     name: "", client: "", location: "",
     date: new Date().toISOString().slice(0,10),
     tech: "",
-    stages: ["Offload","Placement","Hookup","Test"].map(n => ({ id: uid(), name: n, photos: [] })),
+    stages: ["Truck 1","Truck 1 Ratchet Straps","Truck 2","Truck 2 Ratchet Straps","Proof of Air Ride Suspension","Truck Seals","Paperwork"].map(n => ({ id: uid(), name: n, photos: [] })),
     units: [],
     updatedAt: Date.now()
   };
@@ -690,6 +751,64 @@ function toast(msg){
   toastTimer = setTimeout(() => t.classList.remove("show"), 1800);
 }
 
+/* ---------- status + auto-save ---------- */
+function setStatus(t){ $("statusMsg").textContent = t; }
+function nowLabel(){
+  const d = new Date();
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+let saveTimer = null;
+async function persistNow(){
+  if(!state) return false;
+  state.updatedAt = Date.now();
+  try{
+    await dbPut(state);
+    setStatus("Auto-saved " + nowLabel());
+    await populateJobSelect();
+    $("jobSelect").value = state.id;
+    return true;
+  }catch(err){
+    setStatus("Auto-save failed — storage may be full");
+    toast("Auto-save failed — storage may be full");
+    return false;
+  }
+}
+// Debounced save for rapid input (typing); structural changes call persistNow directly.
+function scheduleSave(){
+  setStatus("Saving…");
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(persistNow, 500);
+}
+// Flush any pending save the instant the app is backgrounded (e.g. to take a call).
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "hidden"){ clearTimeout(saveTimer); persistNow(); }
+});
+window.addEventListener("pagehide", () => { clearTimeout(saveTimer); persistNow(); });
+
+/* ---------- confirm dialog ---------- */
+function confirmDialog(message, confirmLabel){
+  return new Promise(resolve => {
+    const ov = document.createElement("div");
+    ov.className = "modal-overlay";
+    ov.innerHTML = `
+      <div class="modal">
+        <p class="modal-msg"></p>
+        <div class="modal-actions">
+          <button class="modal-cancel">Cancel</button>
+          <button class="modal-confirm">${escapeHtml(confirmLabel || "Delete")}</button>
+        </div>
+      </div>`;
+    ov.querySelector(".modal-msg").textContent = message;
+    document.body.appendChild(ov);
+    const done = val => { ov.remove(); resolve(val); };
+    ov.querySelector(".modal-cancel").onclick = () => done(false);
+    ov.querySelector(".modal-confirm").onclick = () => done(true);
+    ov.addEventListener("click", e => { if(e.target === ov) done(false); });
+  });
+}
+
+
 /* ---------- render ---------- */
 function renderJobFields(){
   $("jobName").value = state.name || "";
@@ -705,16 +824,20 @@ function renderStages(){
     const done = s.photos.length > 0;
     return `<div class="stage" data-stage="${s.id}">
       <div class="stage-head">
+        <span class="stage-grip" data-grip="${s.id}" aria-label="Drag to reorder">
+          <svg class="i" style="width:16px;height:16px"><use href="#ic-grip"/></svg>
+        </span>
         <input class="stage-name" data-id="${s.id}" value="${escapeAttr(s.name)}">
-        <div class="row" style="flex:0 0 auto;gap:6px;align-items:center">
+        <div class="head-actions">
           <span class="badge ${done ? "badge-done" : "badge-pending"}">${done ? "Documented" : "Pending"}</span>
           <button class="ghost icon-only removeStage" data-id="${s.id}" aria-label="Remove stage">
-            <svg class="i" style="width:14px;height:14px"><use href="#ic-trash"/></svg>
+            <svg class="i" style="width:16px;height:16px"><use href="#ic-trash"/></svg>
           </button>
         </div>
       </div>
       <div class="thumbs">
-        ${s.photos.map((p,i) => `<div class="thumb-wrap"><img class="thumb" src="${p.data}">
+        ${s.photos.map((p,i) => `<div class="thumb-wrap"><img class="thumb" src="${p.data}" alt="Stage photo ${i+1}">
+          <span class="thumb-num">${i+1}</span>
           <button class="thumb-del" data-stage="${s.id}" data-idx="${i}" data-kind="stage" aria-label="Remove photo">&times;</button></div>`).join("")}
         <label class="add-photo">
           <svg class="i"><use href="#ic-camera"/></svg>
@@ -732,19 +855,25 @@ function renderUnits(){
     return `<div class="unit" data-unit="${u.id}">
       <div class="unit-head">
         <strong style="font-size:14px">Unit ${idx+1}</strong>
-        <div class="row" style="flex:0 0 auto;gap:6px;align-items:center">
+        <div class="head-actions">
           <span class="badge ${u.damaged ? "badge-damage" : "badge-done"}">${u.damaged ? "Damaged" : "No damage"}</span>
           <button class="ghost icon-only removeUnit" data-id="${u.id}" aria-label="Remove unit">
-            <svg class="i" style="width:14px;height:14px"><use href="#ic-trash"/></svg>
+            <svg class="i" style="width:16px;height:16px"><use href="#ic-trash"/></svg>
           </button>
         </div>
       </div>
-      <label class="field">
-        <span class="field-label">Serial number</span>
-        <input type="text" class="mono unitSerial" data-id="${u.id}" value="${escapeAttr(u.serial)}" placeholder="Scan or type serial">
-      </label>
+      <div class="row" style="gap:8px;align-items:flex-end">
+        <label class="field" style="flex:1;margin:0">
+          <span class="field-label">Serial number</span>
+          <input type="text" class="mono unitSerial" data-id="${u.id}" value="${escapeAttr(u.serial)}" placeholder="Scan or type serial">
+        </label>
+        <button class="scanBtn" data-id="${u.id}" style="flex:0 0 auto">
+          <svg class="i" style="width:16px;height:16px"><use href="#ic-barcode"/></svg>Scan
+        </button>
+      </div>
       <div class="thumbs">
-        ${u.serialPhoto ? `<div class="thumb-wrap"><img class="thumb" src="${u.serialPhoto.data}">
+        ${u.serialPhoto ? `<div class="thumb-wrap"><img class="thumb" src="${u.serialPhoto.data}" alt="Serial photo">
+          <span class="thumb-num">1</span>
           <button class="thumb-del" data-unit="${u.id}" data-kind="serial" aria-label="Remove photo">&times;</button></div>` : ""}
         <label class="add-photo">
           <svg class="i"><use href="#ic-barcode"/></svg>
@@ -760,7 +889,8 @@ function renderUnits(){
       ${u.damaged ? `<div style="margin-top:10px">
         <span class="field-label">Damage photos</span>
         <div class="thumbs">
-          ${u.damagePhotos.map((p,i) => `<div class="thumb-wrap"><img class="thumb" src="${p.data}">
+          ${u.damagePhotos.map((p,i) => `<div class="thumb-wrap"><img class="thumb" src="${p.data}" alt="Damage photo ${i+1}">
+            <span class="thumb-num">${i+1}</span>
             <button class="thumb-del" data-unit="${u.id}" data-idx="${i}" data-kind="damage" aria-label="Remove photo">&times;</button></div>`).join("")}
           <label class="add-photo">
             <svg class="i"><use href="#ic-camera"/></svg>
@@ -810,34 +940,51 @@ $("newJobBtn").addEventListener("click", () => {
     const key = id.replace("job","").toLowerCase();
     const map = { name:"name", client:"client", location:"location", date:"date", tech:"tech" };
     state[map[key]] = e.target.value;
+    scheduleSave();
   });
 });
 
 $("addStageBtn").addEventListener("click", () => {
   state.stages.push({ id: uid(), name: "New stage", photos: [] });
   renderStages();
+  persistNow();
 });
 
 $("addUnitBtn").addEventListener("click", () => {
   state.units.push({ id: uid(), serial: "", serialPhoto: null, damaged: false, damagePhotos: [], notes: "" });
   renderUnits();
+  persistNow();
 });
 
 $("stagesContainer").addEventListener("input", e => {
   if(e.target.classList.contains("stage-name")){
     const s = state.stages.find(x => x.id === e.target.dataset.id);
-    if(s) s.name = e.target.value;
+    if(s){ s.name = e.target.value; scheduleSave(); }
   }
 });
 
-$("stagesContainer").addEventListener("click", e => {
+$("stagesContainer").addEventListener("click", async e => {
   const rm = e.target.closest(".removeStage");
-  if(rm){ state.stages = state.stages.filter(s => s.id !== rm.dataset.id); renderStages(); return; }
+  if(rm){
+    const s = state.stages.find(x => x.id === rm.dataset.id);
+    const label = s ? `"${s.name}"` : "this stage";
+    const n = s ? s.photos.length : 0;
+    const extra = n ? ` and its ${n} photo${n === 1 ? "" : "s"}` : "";
+    if(await confirmDialog(`Delete ${label}${extra}?`, "Delete stage")){
+      state.stages = state.stages.filter(x => x.id !== rm.dataset.id);
+      renderStages();
+      persistNow();
+    }
+    return;
+  }
   const del = e.target.closest(".thumb-del");
   if(del && del.dataset.kind === "stage"){
-    const s = state.stages.find(x => x.id === del.dataset.stage);
-    if(s) s.photos.splice(Number(del.dataset.idx), 1);
-    renderStages();
+    if(await confirmDialog("Delete this photo?", "Delete photo")){
+      const s = state.stages.find(x => x.id === del.dataset.stage);
+      if(s) s.photos.splice(Number(del.dataset.idx), 1);
+      renderStages();
+      persistNow();
+    }
   }
 });
 
@@ -848,28 +995,47 @@ $("stagesContainer").addEventListener("change", async e => {
       try{ s.photos.push(await compressImage(file)); } catch(err){ toast("Couldn't read photo"); }
     }
     renderStages();
+    persistNow();
   }
 });
 
 $("unitsContainer").addEventListener("input", e => {
   const u = state.units.find(x => x.id === e.target.dataset.id);
   if(!u) return;
-  if(e.target.classList.contains("unitSerial")) u.serial = e.target.value;
-  if(e.target.classList.contains("unitNotes")) u.notes = e.target.value;
+  if(e.target.classList.contains("unitSerial")){ u.serial = e.target.value; scheduleSave(); }
+  if(e.target.classList.contains("unitNotes")){ u.notes = e.target.value; scheduleSave(); }
 });
 
-$("unitsContainer").addEventListener("click", e => {
+$("unitsContainer").addEventListener("click", async e => {
+  const scan = e.target.closest(".scanBtn");
+  if(scan){ scanBarcode(scan.dataset.id); return; }
   const rm = e.target.closest(".removeUnit");
-  if(rm){ state.units = state.units.filter(u => u.id !== rm.dataset.id); renderUnits(); return; }
+  if(rm){
+    if(await confirmDialog("Delete this damaged unit and its photos?", "Delete unit")){
+      state.units = state.units.filter(u => u.id !== rm.dataset.id);
+      renderUnits();
+      persistNow();
+    }
+    return;
+  }
   const tg = e.target.closest(".toggleDamage");
-  if(tg){ const u = state.units.find(x => x.id === tg.dataset.id); u.damaged = !u.damaged; renderUnits(); return; }
+  if(tg){
+    const u = state.units.find(x => x.id === tg.dataset.id);
+    u.damaged = !u.damaged;
+    renderUnits();
+    persistNow();
+    return;
+  }
   const del = e.target.closest(".thumb-del");
   if(del){
-    const u = state.units.find(x => x.id === del.dataset.unit);
-    if(!u) return;
-    if(del.dataset.kind === "serial") u.serialPhoto = null;
-    if(del.dataset.kind === "damage") u.damagePhotos.splice(Number(del.dataset.idx), 1);
-    renderUnits();
+    if(await confirmDialog("Delete this photo?", "Delete photo")){
+      const u = state.units.find(x => x.id === del.dataset.unit);
+      if(!u) return;
+      if(del.dataset.kind === "serial") u.serialPhoto = null;
+      if(del.dataset.kind === "damage") u.damagePhotos.splice(Number(del.dataset.idx), 1);
+      renderUnits();
+      persistNow();
+    }
   }
 });
 
@@ -880,6 +1046,7 @@ $("unitsContainer").addEventListener("change", async e => {
     if(file){
       try{ u.serialPhoto = await compressImage(file); } catch(err){ toast("Couldn't read photo"); }
       renderUnits();
+      persistNow();
     }
   }
   if(e.target.dataset.damagePhoto){
@@ -888,6 +1055,7 @@ $("unitsContainer").addEventListener("change", async e => {
       try{ u.damagePhotos.push(await compressImage(file)); } catch(err){ toast("Couldn't read photo"); }
     }
     renderUnits();
+    persistNow();
   }
 });
 
@@ -967,7 +1135,7 @@ async function buildAndDeliverPdf(){
 
   newPageIfNeeded(10);
   doc.setFontSize(13);
-  doc.text("Units", margin, y); y += 7;
+  doc.text("Damaged units", margin, y); y += 7;
   state.units.forEach((u, i) => {
     newPageIfNeeded(8);
     doc.setFontSize(11);
@@ -1011,14 +1179,201 @@ async function buildAndDeliverPdf(){
   $("statusMsg").textContent = "PDF exported";
 }
 
+/* ---------- photo viewer (lightbox) ---------- */
+function buildLightbox(){
+  const lb = document.createElement("div");
+  lb.id = "lightbox";
+  lb.hidden = true;
+  lb.innerHTML = `
+    <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+    <img class="lb-img" id="lbImg" alt="Photo full screen">
+    <div class="lb-hint">Tap photo to zoom · tap background to close</div>`;
+  document.body.appendChild(lb);
+
+  lb.addEventListener("click", e => {
+    if(e.target.id === "lbImg"){
+      e.target.classList.toggle("zoomed");
+    } else {
+      closeLightbox();
+    }
+  });
+}
+
+function openLightbox(src){
+  const lb = $("lightbox");
+  const img = $("lbImg");
+  img.classList.remove("zoomed");
+  img.src = src;
+  lb.hidden = false;
+  document.body.style.overflow = "hidden";
+}
+
+function closeLightbox(){
+  const lb = $("lightbox");
+  if(!lb || lb.hidden) return;
+  lb.hidden = true;
+  $("lbImg").src = "";
+  document.body.style.overflow = "";
+}
+
+// Open the viewer whenever a thumbnail is tapped (delete button is separate).
+document.addEventListener("click", e => {
+  const img = e.target.closest("img.thumb");
+  if(img){ openLightbox(img.src); }
+});
+
+// Hardware/browser back or Escape closes the viewer instead of leaving.
+document.addEventListener("keydown", e => { if(e.key === "Escape") closeLightbox(); });
+
+/* ---------- barcode scanner ---------- */
+async function scanBarcode(unitId){
+  if(!("BarcodeDetector" in window)){
+    toast("Barcode scanning isn't supported on this browser");
+    return;
+  }
+  let stream;
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+  }catch(err){
+    toast("Camera unavailable — check app permissions");
+    return;
+  }
+
+  const ov = document.createElement("div");
+  ov.className = "scan-overlay";
+  ov.innerHTML = `
+    <video class="scan-video" playsinline muted></video>
+    <div class="scan-frame"></div>
+    <div class="scan-hint">Point the camera at the barcode</div>
+    <button class="scan-cancel">Cancel</button>`;
+  document.body.appendChild(ov);
+  document.body.style.overflow = "hidden";
+
+  const video = ov.querySelector(".scan-video");
+  video.srcObject = stream;
+  await video.play().catch(() => {});
+
+  let detector;
+  try{ detector = new BarcodeDetector(); }
+  catch(e){ detector = null; }
+
+  let stopped = false;
+  const cleanup = () => {
+    stopped = true;
+    stream.getTracks().forEach(t => t.stop());
+    ov.remove();
+    document.body.style.overflow = "";
+  };
+  ov.querySelector(".scan-cancel").onclick = cleanup;
+
+  const tick = async () => {
+    if(stopped || !detector) return;
+    try{
+      const codes = await detector.detect(video);
+      if(codes && codes.length){
+        const value = (codes[0].rawValue || "").trim();
+        if(value){
+          const u = state.units.find(x => x.id === unitId);
+          if(u){ u.serial = value; renderUnits(); persistNow(); }
+          if(navigator.vibrate) navigator.vibrate(40);
+          toast("Serial scanned: " + value);
+          cleanup();
+          return;
+        }
+      }
+    }catch(e){ /* transient detect errors are fine, keep looping */ }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+/* ---------- drag to reorder stages (long-press) ---------- */
+function setupStageDrag(){
+  const container = $("stagesContainer");
+  let dragEl = null, pressTimer = null, dragging = false, startY = 0, pointerId = null;
+
+  function begin(stage, pid){
+    dragging = true;
+    dragEl = stage;
+    pointerId = pid;
+    stage.classList.add("dragging");
+    container.classList.add("reordering");
+    try{ stage.setPointerCapture(pid); }catch(e){}
+    if(navigator.vibrate) navigator.vibrate(20);
+  }
+
+  container.addEventListener("pointerdown", e => {
+    const grip = e.target.closest(".stage-grip");
+    const stage = e.target.closest(".stage");
+    if(!stage) return;
+    startY = e.clientY;
+    if(grip){
+      // grip: start dragging immediately
+      e.preventDefault();
+      begin(stage, e.pointerId);
+      return;
+    }
+    // body: require a long press, and bail if the finger is really scrolling
+    if(e.target.closest("input, textarea, button, .thumb, .add-photo, .scanBtn")) return;
+    pressTimer = setTimeout(() => { begin(stage, e.pointerId); }, 400);
+  });
+
+  container.addEventListener("pointermove", e => {
+    if(!dragging){
+      if(pressTimer && Math.abs(e.clientY - startY) > 10){ clearTimeout(pressTimer); pressTimer = null; }
+      return;
+    }
+    e.preventDefault();
+    const others = [...container.querySelectorAll(".stage:not(.dragging)")];
+    const after = others.find(sib => {
+      const box = sib.getBoundingClientRect();
+      return e.clientY < box.top + box.height / 2;
+    });
+    if(after) container.insertBefore(dragEl, after);
+    else container.appendChild(dragEl);
+  });
+
+  function endDrag(){
+    if(pressTimer){ clearTimeout(pressTimer); pressTimer = null; }
+    if(!dragging) return;
+    dragging = false;
+    if(dragEl) dragEl.classList.remove("dragging");
+    container.classList.remove("reordering");
+    const order = [...container.querySelectorAll(".stage")].map(el => el.dataset.stage);
+    state.stages.sort((a,b) => order.indexOf(a.id) - order.indexOf(b.id));
+    dragEl = null; pointerId = null;
+    persistNow();
+    renderStages();
+  }
+  container.addEventListener("pointerup", endDrag);
+  container.addEventListener("pointercancel", endDrag);
+}
+
 /* ---------- init ---------- */
 window.addEventListener("load", async () => {
   if("serviceWorker" in navigator){
     try{ await navigator.serviceWorker.register("service-worker.js"); } catch(err){}
   }
-  state = freshJob();
+  buildLightbox();
+  setupStageDrag();
+  // Auto-resume the most recently worked job so nothing feels lost after a break.
+  try{
+    const jobs = await dbGetAll();
+    if(jobs.length){
+      jobs.sort((a,b) => b.updatedAt - a.updatedAt);
+      state = jobs[0];
+      setStatus("Resumed latest job");
+    } else {
+      state = freshJob();
+      setStatus("New job");
+    }
+  }catch(err){
+    state = freshJob();
+    setStatus("New job");
+  }
   renderAll();
   await populateJobSelect();
+  $("jobSelect").value = state.id || "";
 });
 
 })();

@@ -1,4 +1,4 @@
-const CACHE_NAME = "pglowe-v4";
+const CACHE_NAME = "pglowe-v6";
 const ASSETS = [
   "./",
   "./index.html",
